@@ -1,48 +1,59 @@
 // app/page.tsx
+import { Suspense } from "react";
 import PostCard from "@/components/PostCard";
-import { Post, PostWithProfile, Profile } from "@/types";
+import SearchBox from "@/components/SearchBox";
+import SortView from "@/components/SortView";
+import Pagination from "@/components/Pagination";
+import { getPosts } from "@/database/database";
+import type { Post } from "@/types";
 
-const fetchProfiles = async (): Promise<Profile[]> => {
-  const res = await fetch(
-    "https://raw.githubusercontent.com/similonap/json/refs/heads/master/y-clone/profiles.json",
-    { cache: "no-store" }
-  );
-  if (!res.ok) throw new Error("Failed to fetch profiles");
-  return res.json();
+type PageProps = {
+  searchParams: Promise<{
+    q?: string;
+    sort?: string;
+    page?: string;
+  }>;
 };
 
-const fetchPosts = async (): Promise<Post[]> => {
-  const res = await fetch(
-    "https://raw.githubusercontent.com/similonap/json/refs/heads/master/y-clone/posts.json",
-    { cache: "no-store" }
-  );
-  if (!res.ok) throw new Error("Failed to fetch posts");
-  return res.json();
-};
-
-export default async function Home() {
-  const [profiles, posts] = await Promise.all([fetchProfiles(), fetchPosts()]);
-
-  const postsWithProfile: PostWithProfile[] = posts.map((post) => {
-    const profile = profiles.find((p) => p.username === post.username);
-    if (!profile) throw new Error(`Profile not found for ${post.username}`);
-
-    return {
-      ...post,
-      profile,
-    };
-  });
+// Keep the "data part" in a separate Server Component so Suspense can work nicely
+const PostsSection = async ({ q, sort, page }: { q: string; sort: string; page: number }) => {
+  const { posts, pages } = await getPosts(q, sort, page);
 
   return (
-    <div>
-      <h1>Y-Clone</h1>
+    <>
+      <div className="flex flex-col gap-4">
+        {posts.map((p: Post) => (
+          <PostCard key={p._id.toString()} post={p} />
+        ))}
+      </div>
 
-      {postsWithProfile.map((p) => (
-        <PostCard
-         key={`${p.username}-${p.createdOn}`}
-         post={p}
-        />
-      ))}
-    </div>
+      <Pagination pageCount={pages} currentPage={page} />
+    </>
+  );
+};
+
+export default async function Home(props: PageProps) {
+  const sp = await props.searchParams;
+
+  const q = typeof sp.q === "string" ? sp.q : "";
+  const sort = typeof sp.sort === "string" ? sp.sort : "newest";
+
+  // “teacher-style” safe parse:
+  const page =
+    Number.parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1;
+
+  return (
+    <main className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Y-Clone</h1>
+
+      <div className="flex flex-col gap-3 mb-6">
+        <SearchBox />
+        <SortView />
+      </div>
+
+      <Suspense fallback={<div>Loading...</div>}>
+        <PostsSection q={q} sort={sort} page={page} />
+      </Suspense>
+    </main>
   );
 }
