@@ -2,6 +2,8 @@
 import PostCard from "@/components/PostCard";
 import Pagination from "@/components/Pagination";
 import { getPostsByUsername } from "@/database/database";
+import { notFound } from "next/navigation";
+
 
 type PageProps = {
   params: Promise<{ username: string }>;
@@ -11,6 +13,10 @@ type PageProps = {
 export default async function ProfilePage({ params, searchParams }: PageProps) {
   const { username } = await params;
   const sp = await searchParams;
+
+  if (username.includes(".")) {
+  notFound();
+}
 
   const page = Number(sp.page ?? "1");
   const currentPage = Number.isFinite(page) && page > 0 ? page : 1;

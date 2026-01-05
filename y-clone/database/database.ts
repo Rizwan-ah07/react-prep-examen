@@ -1,3 +1,4 @@
+
 import { Collection, MongoClient, ObjectId, Sort } from "mongodb";
 import { Post, Profile } from "@/types";
 
@@ -37,6 +38,18 @@ console.log("Seeded profiles:", profilesFromDb);
 
 return { posts: postsFromDb, profiles: profilesFromDb };
 }
+
+export const addPost = async (text: string) => {
+  if (text.trim() === "") return;
+
+  await postsCollection.insertOne({
+    username: "JonDoe",
+    text,
+    createdOn: new Date().toISOString(),
+    likes: 0,
+  } as any);
+};
+
 
 export const increaseLikes = async (postId: string) => {
   await postsCollection.updateOne(

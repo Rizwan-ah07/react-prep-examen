@@ -6,6 +6,8 @@ import SortView from "@/components/SortView";
 import Pagination from "@/components/Pagination";
 import { getPosts } from "@/database/database";
 import type { Post } from "@/types";
+import NewPostForm from "@/components/NewPostForm";
+
 
 type PageProps = {
   searchParams: Promise<{
@@ -49,6 +51,7 @@ export default async function Home(props: PageProps) {
       <div className="flex flex-col gap-3 mb-6">
         <SearchBox />
         <SortView />
+        <NewPostForm />
       </div>
 
       <Suspense fallback={<div>Loading...</div>}>

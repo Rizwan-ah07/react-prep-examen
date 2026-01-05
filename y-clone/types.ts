@@ -19,6 +19,17 @@ export interface Post{
     profile?: Profile;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  // what you store in DB + put in JWT
+  username: string;
+  // teacher example uses Image src={`/${user.avatar}`} so this is a filename in /public
+  avatar: string;
+  passwordHash: string;
+}
+
 export interface PostWithProfile extends Post{
     profile: Profile;
 }
